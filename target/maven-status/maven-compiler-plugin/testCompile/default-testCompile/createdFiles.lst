@@ -1,0 +1,9 @@
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest$HtmlEscaping.class
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest$TemplateContent.class
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest$ExecuteStage.class
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest$PropertyAccessors.class
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest.class
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest$EmailInfrastructure.class
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest$CompleteStage.class
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest$SharedCss.class
+com\mycompany\custom\usersignup\CustomUserSignUpWorkflowExecutorTest$WorkflowType.class

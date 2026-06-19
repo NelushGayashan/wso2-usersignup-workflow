@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    WSO2 API Manager 4.2.0 — workflow-extensions.xml
+    ═══════════════════════════════════════════════════════════════════════════════
+    Location (registry path):
+        /_system/governance/apimgt/applicationdata/workflow-extensions.xml
+
+    How to edit:
+        1. Log in to the Carbon Management Console: https://localhost:9443/carbon
+        2. Navigate to: Home → Registry → Browse → /_system/governance/apimgt/applicationdata/
+        3. Click workflow-extensions.xml → Properties tab → Edit as text
+        4. Replace the <UserSignUp …/> line with the block below.
+        5. Save. Changes take effect immediately (no restart needed).
+    ═══════════════════════════════════════════════════════════════════════════════
+-->
+<WorkFlowExtensions>
+
+    <!-- ── User Sign-Up ─────────────────────────────────────────────────────── -->
+    <!--
+        Replace the default:
+            <UserSignUp executor="org.wso2.carbon.apimgt.impl.workflow.UserSignUpSimpleWorkflowExecutor"/>
+        with the custom executor below.
+
+        Properties explained
+        ─────────────────────────────────────────────────────────────────────────
+        mailSmtpHost     : SMTP host for email delivery.
+                           Use "localhost" when MailHog runs via Docker Desktop.
+        mailSmtpPort     : SMTP port. MailHog listens on 1025.
+        mailFromAddress  : The "From" address shown in the email.
+        mailFromName     : The display name for the "From" address.
+        adminUsername    : Carbon username of the admin who will receive alerts.
+                           The email is resolved via the email claim of this user.
+        portalUrl        : Full URL to the Developer Portal, included in the user
+                           confirmation email as the CTA button link.
+    -->
+    <UserSignUp executor="com.mycompany.custom.usersignup.CustomUserSignUpWorkflowExecutor">
+        <Property name="mailSmtpHost">localhost</Property>
+        <Property name="mailSmtpPort">1025</Property>
+        <Property name="mailFromAddress">apim-noreply@example.com</Property>
+        <Property name="mailFromName">WSO2 API Manager</Property>
+        <Property name="adminUsername">admin</Property>
+        <Property name="portalUrl">https://localhost:9443/devportal</Property>
+    </UserSignUp>
+
+    <!-- ── All other workflow executors — keep defaults ─────────────────────── -->
+    <ProductionApplicationRegistration
+        executor="org.wso2.carbon.apimgt.impl.workflow.ApplicationRegistrationSimpleWorkflowExecutor"/>
+    <SandboxApplicationRegistration
+        executor="org.wso2.carbon.apimgt.impl.workflow.ApplicationRegistrationSimpleWorkflowExecutor"/>
+    <SubscriptionCreation
+        executor="org.wso2.carbon.apimgt.impl.workflow.SubscriptionCreationSimpleWorkflowExecutor"/>
+    <SubscriptionUpdate
+        executor="org.wso2.carbon.apimgt.impl.workflow.SubscriptionUpdateSimpleWorkflowExecutor"/>
+    <SubscriptionDeletion
+        executor="org.wso2.carbon.apimgt.impl.workflow.SubscriptionDeletionSimpleWorkflowExecutor"/>
+    <ApplicationCreation
+        executor="org.wso2.carbon.apimgt.impl.workflow.ApplicationCreationSimpleWorkflowExecutor"/>
+    <ApplicationUpdate
+        executor="org.wso2.carbon.apimgt.impl.workflow.ApplicationUpdateSimpleWorkflowExecutor"/>
+    <ApplicationDeletion
+        executor="org.wso2.carbon.apimgt.impl.workflow.ApplicationDeletionSimpleWorkflowExecutor"/>
+    <APIStateChange
+        executor="org.wso2.carbon.apimgt.impl.workflow.APIStateChangeSimpleWorkflowExecutor"/>
+
+</WorkFlowExtensions>

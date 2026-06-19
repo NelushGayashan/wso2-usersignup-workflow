@@ -1,0 +1,5 @@
+# Created at 2026-06-19T16:17:56.381
+Boot Manifest-JAR contains absolute paths in classpath 'D:\Education\Programming\Java\wso2-usersignup-workflow\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+

@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- Maven Project Model Version -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Project coordinates -->
+    <groupId>com.mycompany.custom.usersignup</groupId>
+    <artifactId>com.mycompany.custom.usersignup.extension</artifactId>
+    <version>1.0.0</version>
+
+    <!--
+        bundle packaging generates an OSGi bundle JAR.
+        Required because WSO2 APIM runs on an OSGi container (Equinox).
+    -->
+    <packaging>bundle</packaging>
+
+    <name>WSO2 APIM - Custom User Signup Workflow Extension</name>
+
+    <properties>
+
+        <!-- WSO2 API Manager internal component version -->
+        <carbon.apimgt.version>9.28.1</carbon.apimgt.version>
+
+        <!-- WSO2 Carbon Kernel component version -->
+        <carbon.kernel.version>4.7.0</carbon.kernel.version>
+
+        <!-- Java language level -->
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+
+        <!-- Encoding configuration -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Testing framework versions -->
+        <junit.version>5.10.2</junit.version>
+        <mockito.version>5.11.0</mockito.version>
+
+        <!--
+            Reserved for future email testing.
+            Currently not used because SubEthaSMTP/Wiser is used.
+        -->
+        <greenmail.version>2.0.1</greenmail.version>
+
+    </properties>
+
+    <dependencies>
+
+        <!--
+            Provides APIM workflow framework classes:
+            - UserSignUpApprovalWorkflowExecutor
+            - WorkflowDTO
+            - WorkflowResponse
+            - WorkflowStatus
+            - WorkflowException
+
+            Scope=provided because APIM already supplies these libraries.
+        -->
+        <dependency>
+            <groupId>org.wso2.carbon.apimgt</groupId>
+            <artifactId>org.wso2.carbon.apimgt.impl</artifactId>
+            <version>${carbon.apimgt.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--
+            Provides user management functionality:
+            - UserStoreManager
+            - UserRealm
+            - User claim retrieval
+        -->
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.user.core</artifactId>
+            <version>${carbon.kernel.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--
+            Carbon utility classes used internally by APIM.
+        -->
+        <dependency>
+            <groupId>org.wso2.carbon</groupId>
+            <artifactId>org.wso2.carbon.utils</artifactId>
+            <version>${carbon.kernel.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--
+            Logging abstraction used throughout WSO2 Carbon.
+            Required for Log and LogFactory.
+        -->
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--
+            JavaMail API used to:
+            - Create MIME messages
+            - Send HTML emails
+            - Connect to SMTP servers
+
+            Provided by WSO2 runtime.
+        -->
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4.7</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--
+            Servlet API dependency required by Carbon runtime.
+            Not packaged because APIM already provides it.
+        -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- TEST DEPENDENCIES                                      -->
+        <!-- ===================================================== -->
+
+        <!--
+            JUnit 5 testing framework.
+            Used for unit and integration tests.
+        -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            Core Mockito framework.
+            Used to mock WSO2 Carbon and APIM classes.
+        -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            JUnit 5 integration for Mockito.
+            Enables @Mock, @InjectMocks, extensions, etc.
+        -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            Lightweight in-memory SMTP server (Wiser).
+            Used to validate outgoing emails during tests
+            without requiring a real SMTP server.
+        -->
+        <dependency>
+            <groupId>org.subethamail</groupId>
+            <artifactId>subethasmtp</artifactId>
+            <version>3.1.7</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            JavaMail implementation needed by test SMTP server.
+        -->
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4.7</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!--
+                Generates OSGi bundle metadata:
+                - MANIFEST.MF
+                - Import-Package
+                - Export-Package
+
+                Required for deployment into WSO2 APIM's OSGi container.
+            -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.8</version>
+                <extensions>true</extensions>
+
+                <configuration>
+                    <instructions>
+
+                        <!-- Unique bundle identifier -->
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+
+                        <!-- Human-readable bundle name -->
+                        <Bundle-Name>${project.name}</Bundle-Name>
+
+                        <!-- Packages exposed to OSGi runtime -->
+                        <Export-Package>
+                            com.mycompany.custom.usersignup.*;version="${project.version}"
+                        </Export-Package>
+
+                        <!--
+                            Packages expected from APIM runtime.
+
+                            Version ranges ensure compatibility
+                            while preventing loading against
+                            incompatible major versions.
+                        -->
+                        <Import-Package>
+                            org.wso2.carbon.apimgt.impl.workflow.*;version="[9.0.0, 10.0.0)",
+                            org.wso2.carbon.context.*;version="[4.0.0, 5.0.0)",
+                            org.wso2.carbon.user.api.*;version="[1.0.1, 2.0.0)",
+                            org.apache.commons.logging.*;version="[1.2, 2.0)",
+                            javax.mail.*;version="[1.4, 2.0)",
+                            *;resolution:=optional
+                        </Import-Package>
+
+                    </instructions>
+                </configuration>
+
+            </plugin>
+
+            <!--
+                Compiles source code using Java 17.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+
+            </plugin>
+
+            <!--
+                Executes JUnit tests.
+
+                add-opens is required because Mockito performs
+                reflective access on JDK internal classes when
+                running on Java 17+.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+
+                <configuration>
+                    <argLine>
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>

@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1781866079371
+Build-Jdk-Spec: 17
+Bundle-ManifestVersion: 2
+Bundle-Name: WSO2 APIM - Custom User Signup Workflow Extension
+Bundle-SymbolicName: com.mycompany.custom.usersignup.extension
+Bundle-Version: 1.0.0
+Created-By: Apache Maven Bundle Plugin 5.1.8
+Export-Package: com.mycompany.custom.usersignup;version="1.0.0";uses:="o
+ rg.wso2.carbon.apimgt.api,org.wso2.carbon.apimgt.impl.dto,org.wso2.carb
+ on.apimgt.impl.workflow"
+Import-Package: org.wso2.carbon.apimgt.impl.workflow;version="[9.0.0,10.
+ 0.0)",org.wso2.carbon.context;version="[4.0.0,5.0.0)",org.wso2.carbon.u
+ ser.api;version="[1.0.1,2.0.0)",org.apache.commons.logging;version="[1.
+ 2,2.0)",javax.mail;version="[1.4,2.0)",javax.mail.internet;version="[1.
+ 4,2.0)",java.io;resolution:=optional,java.lang;resolution:=optional,jav
+ a.lang.invoke;resolution:=optional,java.time;resolution:=optional,java.
+ time.format;resolution:=optional,java.util;resolution:=optional,java.ut
+ il.concurrent;resolution:=optional,org.wso2.carbon.apimgt.api;resolutio
+ n:=optional;version="[9.28,10)",org.wso2.carbon.apimgt.impl.dto;resolut
+ ion:=optional;version="[9.28,10)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=17))"
+Tool: Bnd-6.3.1.202206071316
