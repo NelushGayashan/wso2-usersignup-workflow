@@ -106,9 +106,9 @@ The bundle has **zero runtime dependencies beyond what WSO2 Carbon already provi
 ## Workflow lifecycle
 
 ```
-┌───────────────────────┐         ┌─────────────────────────┐
-│   USER SUBMITS         │         │   ADMIN DECIDES          │
-│   signup form           │         │   approve / reject       │
+┌────────────────────────┐         ┌───────────────────────────┐
+│   USER SUBMITS         │         │   ADMIN DECIDES           │
+│   signup form          │         │   approve / reject        │
 └──────────┬─────────────┘         └────────────┬──────────────┘
            │                                     │
            ▼                                     ▼
@@ -139,10 +139,10 @@ Four HTML emails, all built on one shared CSS design system (`sharedCss()`), so 
 
 | # | Template method | Sent to | Sent when | Subject line |
 |---|---|---|---|---|
-| 1 | `getAdminPendingTemplate()` | Admin | Stage 1 | *Action required: pending developer registration* |
-| 2 | `getUserPendingTemplate()` | Applicant | Stage 1 | *Your developer registration is pending approval* |
-| 3 | `getUserApprovedTemplate()` | Applicant | Stage 2 (approved) | *Your developer account has been approved* |
-| 4 | `getUserRejectedTemplate()` | Applicant | Stage 2 (rejected) | *An update on your registration request* |
+| 1 | `getAdminPendingTemplate()` | Admin | Stage 1 | *Action required: pending developer registration*![img.png](img.png) |
+| 2 | `getUserPendingTemplate()` | Applicant | Stage 1 | *Your developer registration is pending approval*![img_1.png](img_1.png) |
+| 3 | `getUserApprovedTemplate()` | Applicant | Stage 2 (approved) | *Your developer account has been approved*![img_2.png](img_2.png) |
+| 4 | `getUserRejectedTemplate()` | Applicant | Stage 2 (rejected) | *An update on your registration request*![img_3.png](img_3.png) |
 
 **Design language:**
 - A dark (`#0f172a`) header bar with the WSO2 branding mark on every email, for instant visual recognition in an inbox.
