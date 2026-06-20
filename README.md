@@ -5,7 +5,7 @@
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![WSO2](https://img.shields.io/badge/WSO2-API_Manager_4.2.0-red)
 ![Maven](https://img.shields.io/badge/Maven-3.6+-blue)
-![OSGi](https://img.shields.io/badge/OSGi-Bundle-green)
+![OSGi](https://img.shields.io/badge/OSGi-Equinox_3.14-green)
 ![License](https://img.shields.io/badge/License-MIT-success)
 
 </p>
@@ -30,13 +30,13 @@ This README documents the project end-to-end: the problem being solved, the arch
 - [Configuration](#configuration)
 - [Test suite](#test-suite)
 - [The development journey — problems faced & solved](#the-development-journey--problems-faced--solved)
-    - [OSGi packaging and classloader issues](#1-osgi-packaging-and-classloader-issues)
-    - [Designing the two-stage workflow](#2-designing-the-two-stage-workflow)
-    - [Building a hermetic test suite without a real SMTP server](#3-building-a-hermetic-test-suite-without-a-real-smtp-server)
-    - [The SMTP race condition](#4-the-smtp-race-condition)
-    - [The XSS escaping gap](#5-the-xss-escaping-gap)
-    - [The silent rejection-email bug](#6-the-silent-rejection-email-bug-the-big-one)
-    - [File drift between iterations](#7-file-drift-between-iterations)
+  - [OSGi packaging and classloader issues](#1-osgi-packaging-and-classloader-issues)
+  - [Designing the two-stage workflow](#2-designing-the-two-stage-workflow)
+  - [Building a hermetic test suite without a real SMTP server](#3-building-a-hermetic-test-suite-without-a-real-smtp-server)
+  - [The SMTP race condition](#4-the-smtp-race-condition)
+  - [The XSS escaping gap](#5-the-xss-escaping-gap)
+  - [The silent rejection-email bug](#6-the-silent-rejection-email-bug-the-big-one)
+  - [File drift between iterations](#7-file-drift-between-iterations)
 - [XSS protection](#xss-protection)
 - [Known limitations & future work](#known-limitations--future-work)
 - [Troubleshooting](#troubleshooting)
@@ -96,7 +96,7 @@ WSO2 API Manager Runtime (OSGi / Equinox container)
 │       ├── Render approval OR rejection HTML email
 │       └── Dispatch via javax.mail / SMTP
 │
-└── SMTP relay (Mailhog locally / corporate relay in production)
+└── SMTP relay (local dev SMTP server / corporate relay in production)
 ```
 
 The bundle has **zero runtime dependencies beyond what WSO2 Carbon already provides** (`javax.mail`, `commons-logging`, Carbon's own user-store and workflow APIs). This was a deliberate constraint, not an oversight — see [OSGi packaging issues](#1-osgi-packaging-and-classloader-issues) below for why.
@@ -167,8 +167,7 @@ Every dynamic value (username, email address) that gets interpolated into these 
 | Workflow base class | **`org.wso2.carbon.apimgt.impl.workflow.UserSignUpApprovalWorkflowExecutor`** | WSO2's own two-stage (execute/complete) approval workflow base |
 | User claim resolution | **Carbon `UserStoreManager` / `PrivilegedCarbonContext`** | The native WSO2 mechanism for resolving user email addresses and other profile claims |
 | Unit testing | **JUnit 5.10.2 + Mockito 5.11.0** | Modern, well-supported, good `@Nested`/parameterized-test ergonomics |
-| Test SMTP server (unit) | **SubEthaSMTP / Wiser 3.1.7** | `javax.mail`-native in-process SMTP server — no jakarta.mail package conflicts, no Docker dependency for `mvn test` |
-| Test SMTP server (visual) | **[Mailhog](https://github.com/mailhog/MailHog)** | Real SMTP server with a web UI, for manually eyeballing rendered HTML during development |
+| Test SMTP server | **SubEthaSMTP / Wiser 3.1.7** | `javax.mail`-native in-process SMTP server — no jakarta.mail package conflicts, no external infrastructure dependency for `mvn test` |
 
 ---
 
@@ -185,8 +184,7 @@ wso2-usersignup-workflow/
 │   │                                                            #   email dispatch, HTML templates, esc()
 │   │
 │   └── test/java/com/mycompany/custom/usersignup/
-│       ├── CustomUserSignUpWorkflowExecutorTest.java           # Hermetic unit suite (runs on every `mvn test`)
-│       └── CustomUserSignUpWorkflowExecutorMailhogIT.java      # Manual visual suite (Mailhog, excluded by default)
+│       └── CustomUserSignUpWorkflowExecutorTest.java           # Hermetic unit suite (runs on every `mvn test`)
 │
 └── target/
     └── com.mycompany.custom.usersignup.extension-1.0.0.jar    # Compiled OSGi bundle, ready for dropins/
@@ -199,7 +197,6 @@ wso2-usersignup-workflow/
 - **JDK 11–17** — WSO2 Carbon explicitly only supports this range; anything outside it (e.g. JDK 21) will cause the server to refuse to start cleanly.
 - **Apache Maven 3.6+**
 - **WSO2 API Manager 4.2.0** target instance (local or remote)
-- **[Mailhog](https://github.com/mailhog/MailHog)** (optional, only for the manual visual test suite and local SMTP development) — SMTP on `:1025`, web UI on `:8025`
 
 ---
 
@@ -261,9 +258,9 @@ WSO2 populates these `Property` values into the executor via the standard JavaBe
 
 The project maintains **two deliberately separate test classes**, because they serve fundamentally different purposes and have different infrastructure requirements:
 
-### 1. Hermetic unit suite — `CustomUserSignUpWorkflowExecutorTest`
+### `CustomUserSignUpWorkflowExecutorTest`
 
-Runs on **every** `mvn test`. Requires **zero external infrastructure** — no live SMTP server, no WSO2 instance, no network access, no Docker. This is what makes it safe to run in CI on every commit.
+Runs on **every** `mvn test`. Requires **zero external infrastructure** — no live SMTP server, no WSO2 instance, no network access. This is what makes it safe to run in CI on every commit.
 
 **How it achieves this:**
 - **Mockito** mocks WSO2's `PrivilegedCarbonContext`, `UserRealm`, and `UserStoreManager` — so the test never touches a real Carbon user store.
@@ -283,20 +280,6 @@ Runs on **every** `mvn test`. Requires **zero external infrastructure** — no l
 | `SharedCss` | The shared CSS block is well-formed and defines the expected structural classes |
 
 **A non-obvious but important detail:** the test suite includes a deliberate **race-condition guard**. `javax.mail.Transport.send()` returns as soon as the SMTP server ACKs the `DATA` command — which can happen *before* Wiser's accept thread finishes appending the message to its internal list. Without accounting for this, fast machines and CI runners can read an empty message list immediately after `send()` returns, producing intermittent, hard-to-reproduce test failures. The suite solves this with `awaitMessageCount()` — a short poll-with-timeout helper — wired in via `withCarbonContextExpectingMessages()`, used anywhere a test needs to immediately inspect a just-sent email.
-
-### 2. Manual visual suite — `CustomUserSignUpWorkflowExecutorMailhogIT`
-
-**Excluded from the default build** via a Surefire `<excludes>` pattern matching `*MailhogIT.java`. This suite sends real SMTP traffic to a locally running [Mailhog](https://github.com/mailhog/MailHog) instance, so the rendered HTML templates can be visually inspected in Mailhog's web UI — something no amount of `assertTrue(body.contains(...))` can substitute for when you actually want to *see* whether a template looks right.
-
-Run explicitly:
-
-```powershell
-mvn test -Pmailhog-integration
-```
-
-**Prerequisites:** Mailhog running locally (SMTP `:1025`, HTTP UI `:8025`). If Mailhog isn't reachable, the suite fails fast in `@BeforeEach` with an explicit, actionable message — not a confusing raw `ConnectException` stack trace three layers deep.
-
-This two-suite split exists specifically so that the fast, CI-safe suite can never accidentally become dependent on a Docker container being available — a mistake that's easy to make if visual-verification and correctness-verification tests are mixed into the same class.
 
 ---
 
@@ -432,7 +415,6 @@ Usernames are user-controlled input, rendered directly into HTML email bodies. `
 - **In-memory email cache is single-node only.** A WSO2 server restart occurring between a user's signup submission and the admin's decision will lose the cached fallback email, reverting to the original failure mode for that one request. Acceptable for typical same-session approval flows; not safe for deployments where approvals can remain pending for extended periods without a persisted store.
 - **No retry or dead-letter queue for failed SMTP sends.** Failures are logged and dropped. Reasonable for a notification-only, non-business-critical feature as currently scoped — worth revisiting if email delivery becomes a hard requirement (e.g. compliance-driven audit trails).
 - **`esc()` is a manual, narrow-purpose escaper**, not a full HTML sanitization library. It is correctly scoped for its one job (escaping plain-text usernames/emails into a fixed template) and should not be generalized to arbitrary HTML input without a proper sanitization library.
-- **The Mailhog integration suite requires manual setup** and is not part of CI by design — this is an intentional trade-off favoring a fast, dependency-free default test run over comprehensive automated visual regression testing. A future iteration could add automated screenshot-diffing against Mailhog as a separate, explicitly-triggered CI job.
 
 ---
 
@@ -443,8 +425,6 @@ Usernames are user-controlled input, rendered directly into HTML email bodies. `
 **Custom executor doesn't seem to trigger at all** — Check for a typo in the fully-qualified class name inside `workflow-extensions.xml`, and clear the OSGi `work/` cache before restarting (`deploy.ps1 -FreshInstall` does this automatically). A stale cache can cause Equinox to keep an old bundle version loaded even after a new JAR is dropped into `dropins/`.
 
 **Emails aren't arriving / fields are blank** — Most commonly, the target user's profile is missing the `http://wso2.org/claims/emailaddress` claim. Check via the Carbon Admin Console (`https://localhost:9443/carbon` → Users and Roles → user profile) that the Email Address attribute is populated.
-
-**`mvn test` fails with Mailhog connection errors** — You're likely running `mvn test -Pmailhog-integration` without Mailhog actually running locally. Either start Mailhog (`docker run -d -p 1025:1025 -p 8025:8025 mailhog/mailhog`) or drop the `-Pmailhog-integration` flag to run the default hermetic suite instead.
 
 **`CARBON is supported only between JDK 11 and JDK 17`** at server startup — `JAVA_HOME` is pointing at an unsupported JDK version (e.g. 21). Set `JAVA_HOME` to a JDK in the 11–17 range before starting WSO2.
 
